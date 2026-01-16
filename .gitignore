@@ -1,0 +1,49 @@
+# --- Python (base) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.pyre/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- Virtual env ---
+.venv/
+venv/
+ENV/
+env/
+pip-wheel-metadata/
+
+# --- Packaging / builds ---
+build/
+dist/
+*.egg-info/
+
+# --- Secrets / env files ---
+.env
+.env.*
+!.env.example
+
+# --- SQLite / local data ---
+*.db
+*.sqlite
+*.sqlite3
+data/
+storage/
+tmp/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
