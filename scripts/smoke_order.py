@@ -1,32 +1,19 @@
-import os
-from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce
-from dotenv import load_dotenv
-
-load_dotenv()
-
-def must_env(k: str) -> str:
-    v = os.getenv(k)
-    if not v:
-        raise RuntimeError(f"Missing env: {k}")
-    return v
+from src.config import get_settings
+from src.broker.ibkr import IBKRBroker
+from src.broker.base import OrderIntent
 
 if __name__ == "__main__":
-    key = must_env("ALPACA_API_KEY_ID")
-    secret = must_env("ALPACA_API_SECRET_KEY")
-    paper = os.getenv("ALPACA_PAPER", "true").lower() == "true"
+    s = get_settings()
+    b = IBKRBroker(s)
+    b.connect()
 
-    tc = TradingClient(key, secret, paper=paper)  # :contentReference[oaicite:10]{index=10}
+    # 先用一个“非常小”的 qty 做 paper 测试
+    intent = OrderIntent(symbol="SPY", side="BUY", qty=1, order_type="MKT")
+    ack = b.place_order(intent)
+    print("SUBMITTED:", ack)
 
-    order_req = MarketOrderRequest(
-        symbol="SPY",
-        qty=1,
-        side=OrderSide.BUY,
-        time_in_force=TimeInForce.DAY,
-    )
-    order = tc.submit_order(order_data=order_req)  # order request objects :contentReference[oaicite:11]{index=11}
-    print("submitted:", order.id, order.status)
+    # 等一会儿看状态变化
+    final_st = b.wait_until_done(ack.broker_order_id, timeout_s=15)
+    print("FINAL STATUS:", final_st)
 
-    fetched = tc.get_order_by_id(order.id)
-    print("fetched:", fetched.id, fetched.status, fetched.filled_qty, fetched.filled_avg_price)
+    b.disconnect()
