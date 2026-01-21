@@ -2,18 +2,29 @@ from src.config import get_settings
 from src.broker.ibkr import IBKRBroker
 from src.broker.base import OrderIntent
 
-if __name__ == "__main__":
+def main():
     s = get_settings()
-    b = IBKRBroker(s)
-    b.connect()
+    broker = IBKRBroker(s)
+    try:
+        broker.connect()
 
-    # 先用一个“非常小”的 qty 做 paper 测试
-    intent = OrderIntent(symbol="SPY", side="BUY", qty=1, order_type="MKT")
-    ack = b.place_order(intent)
-    print("SUBMITTED:", ack)
+        ack = broker.place_order(OrderIntent(
+            symbol="SPY",
+            side="BUY",
+            qty=1,
+            order_type="MKT",
+        ))
+        print("submitted:", ack.broker_order_id, ack.status)
 
-    # 等一会儿看状态变化
-    final_st = b.wait_until_done(ack.broker_order_id, timeout_s=15)
-    print("FINAL STATUS:", final_st)
+        # 轮询几次看状态变化（v0.1 足够）
+        for _ in range(10):
+            st = broker.get_order_status(ack.broker_order_id)
+            print("status:", st)
+            if st in {"Filled", "Cancelled", "Inactive"}:
+                break
+            broker.ib.sleep(0.5)
+    finally:
+        broker.disconnect()
 
-    b.disconnect()
+if __name__ == "__main__":
+    main()

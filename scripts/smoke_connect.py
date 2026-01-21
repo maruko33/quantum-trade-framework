@@ -1,10 +1,15 @@
 from src.config import get_settings
 from src.broker.ibkr import IBKRBroker
 
-if __name__ == "__main__":
+def main():
     s = get_settings()
-    b = IBKRBroker(s)
-    b.connect()
-    acct = b.get_account()
-    print("ACCOUNT:", acct)
-    b.disconnect()
+    broker = IBKRBroker(s)
+    try:
+        broker.connect()
+        print("connected: True")
+        print("serverVersion:", broker.ib.client.serverVersion())
+    finally:
+        broker.disconnect()
+
+if __name__ == "__main__":
+    main()

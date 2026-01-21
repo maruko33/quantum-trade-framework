@@ -88,11 +88,25 @@ class IBKRBroker(Broker):
         else:
             raise ValueError(f"Unsupported order_type: {intent.order_type}")
 
+        order.tif = "DAY"
         trade = self.ib.placeOrder(contract, order)
-        # trade.order.permId / orderId 可能在片刻后才有
-        self.ib.sleep(0.5)
 
-        broker_id = str(trade.order.orderId) if trade.order and trade.order.orderId else str(trade.order.permId)
+        
+        deadline = time.time() + 3.0
+        while True:
+            order_id = getattr(trade.order, "orderId", 0) or 0
+            perm_id = getattr(trade.order, "permId", 0) or 0
+            if order_id != 0 or perm_id != 0:
+                break
+            if time.time() > deadline:
+                break
+            self.ib.sleep(0.2)
+
+        
+        order_id = getattr(trade.order, "orderId", 0) or 0
+        perm_id = getattr(trade.order, "permId", 0) or 0
+        broker_id = str(perm_id if perm_id != 0 else order_id)
+
         status = trade.orderStatus.status if trade.orderStatus else "UNKNOWN"
         self._trades_by_id[broker_id] = trade
         return OrderAck(broker_order_id=broker_id, status=status)

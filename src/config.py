@@ -18,6 +18,7 @@ class Settings:
     ib_host: str
     ib_port: int
     ib_client_id: int
+    ib_account: str | None
 
 
 def get_settings() -> Settings:
@@ -25,9 +26,12 @@ def get_settings() -> Settings:
     ib_host = os.getenv("IB_HOST", "127.0.0.1").strip()
     ib_port = int(os.getenv("IB_PORT", "7497").strip())
     ib_client_id = int(os.getenv("IB_CLIENT_ID", "7").strip())
+    raw = os.getenv("IB_ACCOUNT")
+    ib_account = raw.strip() if raw else None
     return Settings(
         trading_mode=trading_mode,
         ib_host=ib_host,
         ib_port=ib_port,
         ib_client_id=ib_client_id,
+        ib_account=ib_account,
     )
